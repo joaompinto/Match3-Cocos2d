@@ -2,37 +2,8 @@ from cocos.layer import *
 
 from cocos.text import *
 from cocos.actions import *
-
-class Status( object ):
-    def __init__( self ):
-
-        # current score
-        self.score = 0
-
-        # next piece
-        self.next_piece = None
-
-        # current level
-        self.level = None
-
-        # current level idx
-        self.level_idx = None
-
-        # level lines completed
-        self.lines = 0
-
-        # total lines completed
-        self.tot_lines = 0
-
-    def reset( self ):
-        self.score = 0
-        self.next_piece = None
-        self.level = None
-        self.level_idx = None
-        self.lines = 0
-        self.tot_lines = 0
-
-status = Status()
+from random import randint
+from status import status
 
 class BackgroundLayer(Layer):
     def __init__(self):
@@ -42,18 +13,19 @@ class BackgroundLayer(Layer):
     def draw(self):
         pass
         # glPushMatrix()
-        #self.transform()
+        # self.transform()
         #self.img.blit(0,0)
         #glPopMatrix()
 
 
-class ScoreLayer(ColorLayer):
+class ScoreLayer(Layer):
+    objectives = []
     def __init__(self):
         w, h = director.get_window_size()
-        super(ScoreLayer, self).__init__(64, 64, 224, 120)
+        super(ScoreLayer, self).__init__()
 
         # transparent layer
-        self.add(ColorLayer(32, 32, 32, 32, width=w, height=48), z=-1)
+        self.add(ColorLayer(100, 100, 200, 100, width=w, height=48), z=-1)
 
         self.position = (0, h - 48)
 
@@ -63,16 +35,7 @@ class ScoreLayer(ColorLayer):
                            anchor_x='left',
                            anchor_y='bottom')
         self.score.position = (0, 0)
-        self.add(self.score)
-
-        self.lines = Label('Lines:', font_size=36,
-                           font_name='Edit Undo Line BRK',
-                           color=(255, 255, 255, 255),
-                           anchor_x='left',
-                           anchor_y='bottom')
-        self.lines.position = (235, 0)
-        self.add(self.lines)
-
+        #self.add(self.score)
         self.lvl = Label('Lvl:', font_size=36,
                          font_name='Edit Undo Line BRK',
                          color=(255, 255, 255, 255),
@@ -80,18 +43,47 @@ class ScoreLayer(ColorLayer):
                          anchor_y='bottom')
 
         self.lvl.position = (450, 0)
-        self.add(self.lvl)
+        #self.add(self.lvl)
+        self.objectives_list = []
+        self.objectives_labels = []
+
+    def set_objectives(self, objectives):
+        w, h = director.get_window_size()
+        for tile_type, sprite, count in self.objectives:
+            self.remove(sprite)
+        for count_label in self.objectives_labels:
+            self.remove(count_label)
+        self.objectives = objectives
+        self.objectives_labels = []
+        i = 0
+        x = w/2-150/2
+        for tile_type, sprite, count in objectives:
+            text_w = len(str(count))*7
+            count_label = Label(str(count), font_size=14,
+                   font_name='Edit Undo Line BRK',
+                   color=(255, 255, 255, 255), bold=True,
+                   anchor_x='left', anchor_y='bottom')
+            count_label.position = x-text_w, 7
+            self.add(count_label, z=2)
+            self.objectives_labels.append(count_label)
+            count_label = Label(str(count), font_size=16,
+                   font_name='Edit Undo Line BRK',
+                   color=(0, 0, 0, 255), bold=True,
+                   anchor_x='left', anchor_y='bottom')
+            count_label.position = x-text_w-1, 8
+            self.add(count_label, z=1)
+            self.objectives_labels.append(count_label)
+            sprite.position = x, 24
+            sprite.scale = 0.5
+            x += 50
+            self.add(sprite)
 
     def draw(self):
         super(ScoreLayer, self).draw()
-        self.score.element.text = 'Score:%d' % 0
-        self.lines.element.text = 'Lines:%d' % 0
+        self.score.element.text = 'Score:%d' % status.score
 
         lvl = status.level_idx or 0
         self.lvl.element.text = 'Lvl:%d' % lvl
-
-        if status.next_piece:
-            status.next_piece.draw()
 
 
 class MessageLayer(Layer):
@@ -121,8 +113,12 @@ class MessageLayer(Layer):
 class HUD(Layer):
     def __init__(self):
         super(HUD, self).__init__()
-        self.add(ScoreLayer())
+        self.score_layer = ScoreLayer()
+        self.add(self.score_layer)
         self.add(MessageLayer(), name='msg')
 
     def show_message(self, msg, callback=None):
         self.get('msg').show_message(msg, callback)
+
+    def set_objectives(self, objectives):
+        self.score_layer.set_objectives(objectives)

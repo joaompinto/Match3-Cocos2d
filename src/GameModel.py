@@ -1,10 +1,11 @@
 __all__ = ['GameModel']
 
 import pyglet
-from random import choice
+from random import choice, randint
 from glob import glob
 from cocos.sprite import Sprite
 from cocos.actions import *
+from status import status
 
 CELL_WIDTH, CELL_HEIGHT = 100, 100
 ROWS_COUNT, COLS_COUNT = 6, 8
@@ -26,15 +27,25 @@ class GameModel(pyglet.event.EventDispatcher):
         self.swap_end_pos = None  # Position of the second tile clicked for swapping
         self.available_tiles = glob('images/*.png')
         self.game_state = WAITING_PLAYER_MOVEMENT
-
-    def can_play(self):
-        return self.game_state == WAITING_PLAYER_MOVEMENT
+        self.objectives = []
 
     def start(self):
         self.set_next_level()
 
     def set_next_level(self):
         self.fill_with_random_tiles()
+        self.set_objectives()
+
+    def set_objectives(self):
+        objectives = []
+        while len(objectives) < 3:
+            tile_type = choice(self.available_tiles)
+            sprite = self.tile_sprite(tile_type, (0, 0))
+            count = randint(1, 20)
+            if tile_type not in [x[0] for x in objectives]:
+                objectives.append([tile_type, sprite, count])
+
+        self.objectives = objectives
 
     def fill_with_random_tiles(self):
         """
@@ -69,11 +80,18 @@ class GameModel(pyglet.event.EventDispatcher):
         """
         :return: Implodes lines with more than 3 elements of the same type
         """
+        implode_count = {}
         for x, y in self.get_same_type_lines(self.tile_grid):
-            same_type, sprite = self.tile_grid[x, y]
+            tile_type, sprite = self.tile_grid[x, y]
             self.tile_grid[x, y] = None
             self.imploding_tiles.append(sprite)  # Track tiles being imploded
             sprite.do(ScaleTo(0, 0.5) | RotateTo(180, 0.5) + CallFuncS(self.on_tile_remove))  # Implode animation
+            implode_count[tile_type] = implode_count.get(tile_type, 0) + 1
+        for elem in self.objectives:
+            if elem[0] in implode_count:
+                Scale = ScaleBy(1.5, 0.2)
+                elem[2] = max(0, elem[2]-implode_count[elem[0]])
+                elem[1].do((Scale + Reverse(Scale))*3)
         if len(self.imploding_tiles) > 0:
             self.game_state = IMPLODING_TILES  # Wait for the implosion animation to finish
         else:
@@ -115,9 +133,11 @@ class GameModel(pyglet.event.EventDispatcher):
             self.implode_lines()  # Check for new implosions
 
     def on_tile_remove(self, sprite):
+        status.score += 1
         self.imploding_tiles.remove(sprite)
         self.view.remove(sprite)
         if len(self.imploding_tiles) == 0:  # Implosion complete, drop tiles to fill gaps
+            self.dispatch_event("on_update_objectives")
             self.drop_groundless_tiles()
 
     def set_controller( self, controller):
@@ -206,6 +226,34 @@ class GameModel(pyglet.event.EventDispatcher):
         all_line_members = list(set(all_line_members))
         return all_line_members
 
+    def on_mouse_press(self, x, y):
+        if self.game_state == WAITING_PLAYER_MOVEMENT:
+            self.swap_start_pos = self.to_model_pos((x, y))
+            self.game_state = PLAYER_DOING_MOVEMENT
+
+    def on_mouse_drag(self, x, y):
+        if self.game_state != PLAYER_DOING_MOVEMENT:
+            return
+
+        start_x, start_y = self.swap_start_pos
+        self.swap_end_pos = new_x, new_y = self.to_model_pos((x, y))
+
+        distance = abs(new_x - start_x) + abs(new_y - start_y)  # horizontal + vertical grid steps
+
+        # Ignore movement if not at 1 step away from the initial position
+        if new_x < 0 or new_y < 0 or distance != 1:
+            return
+
+        # Start swap animation for both objects
+        tile_type, sprite = self.tile_grid[self.swap_start_pos]
+        sprite.do(MoveTo(self.to_display(self.swap_end_pos), 0.4))
+        tile_type, sprite = self.tile_grid[self.swap_end_pos]
+        sprite.do(MoveTo(self.to_display(self.swap_start_pos), 0.4) + CallFunc(self.on_tiles_swap_completed))
+
+        # Swap elements at the board data grid
+        self.swap_elements(self.swap_start_pos, self.swap_end_pos)
+        self.game_state = SWAPPING_TILES
+
     def dump_table(self):
         """
         :return: Prints the play table, for debug
@@ -216,4 +264,4 @@ class GameModel(pyglet.event.EventDispatcher):
                 line_str += str(self.tile_grid[x, y][0])
             print line_str
 
-GameModel.register_event_type('on_move_tile')
+GameModel.register_event_type('on_update_objectives')

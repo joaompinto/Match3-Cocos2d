@@ -6,8 +6,6 @@ from GameModel import GameModel
 from GameController import GameController
 
 
-
-
 __all__ = ['get_newgame']
 
 
@@ -19,8 +17,13 @@ class GameView(cocos.layer.ColorLayer):
         model.set_view(self)
         self.hud = hud
         self.model = model
+        self.model.push_handlers(self.on_update_objectives)
         self.model.start()
+        self.hud.set_objectives(self.model.objectives)
         self.hud.show_message('GET READY')
+
+    def on_update_objectives(self):
+        self.hud.set_objectives(self.model.objectives)
 
 def get_newgame():
 
@@ -28,7 +31,6 @@ def get_newgame():
     scene = Scene()
     model = GameModel()
     controller = GameController(model)
-
     # view
     hud = HUD()
     view = GameView(model, hud)
