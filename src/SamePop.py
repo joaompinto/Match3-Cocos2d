@@ -1,21 +1,24 @@
+from os.path import exists, join
+
 import pyglet.resource
 from cocos import director
 from cocos.scene import Scene
+from cocos.layer import MultiplexLayer
+from Menus import MainMenu
 
-from os.path import exists, join, basename
 
 if exists(join('src', 'SamePop.py')):  # When launched from src dir
     pyglet.resource.path = ['..']
     pyglet.resource.reindex()
 
-from PlayBoard import PlayBoard
+director.director.init(width=800, height=650, caption="Pop The Same")
 
-director.director.init(width=800, height=600, caption="Pop The Same")
+scene = Scene()
+scene.add(MultiplexLayer(
+    MainMenu()
+    #,OptionsMenu(),
+    #ScoresLayer(),
+),
+    z=1)
 
-#platform = director.window.get_platform()
-#display = platform.get_default_display()
-#screen_width, screen_height = display.get_default_screen().width, display.get_default_screen().height
-player_layer = PlayBoard()
-main_scene = Scene(player_layer)
-
-director.director.run(main_scene)
+director.director.run(scene)
