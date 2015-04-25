@@ -1,5 +1,6 @@
 
 import cocos
+from cocos.director import director
 from cocos.scene import Scene
 from HUD import HUD
 from GameModel import GameModel
@@ -17,13 +18,26 @@ class GameView(cocos.layer.ColorLayer):
         model.set_view(self)
         self.hud = hud
         self.model = model
-        self.model.push_handlers(self.on_update_objectives)
+        self.model.push_handlers(self.on_update_objectives
+                                 , self.on_update_time
+                                 , self.on_game_over
+                                 , self.on_game_out)
         self.model.start()
         self.hud.set_objectives(self.model.objectives)
         self.hud.show_message('GET READY')
 
     def on_update_objectives(self):
         self.hud.set_objectives(self.model.objectives)
+
+    def on_update_time(self, time_percent):
+        self.hud.update_time(time_percent)
+
+    def on_game_over(self):
+        self.hud.show_message('GAME OVER', persist=True)
+
+    def on_game_out(self):
+        director.pop()
+
 
 def get_newgame():
 

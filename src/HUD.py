@@ -2,7 +2,7 @@ from cocos.layer import *
 
 from cocos.text import *
 from cocos.actions import *
-from random import randint
+from ProgressBar import ProgressBar
 from status import status
 
 class BackgroundLayer(Layer):
@@ -29,6 +29,10 @@ class ScoreLayer(Layer):
 
         self.position = (0, h - 48)
 
+
+        progress_bar = self.progress_bar = ProgressBar(width=200, height=20)
+        progress_bar.position = 20, 15
+        self.add(progress_bar)
         self.score = Label('Score:', font_size=36,
                            font_name='Edit Undo Line BRK',
                            color=(255, 255, 255, 255),
@@ -87,7 +91,7 @@ class ScoreLayer(Layer):
 
 
 class MessageLayer(Layer):
-    def show_message(self, msg, callback=None):
+    def show_message(self, msg, callback=None, persist=False):
         w, h = director.get_window_size()
 
         self.msg = Label(msg,
@@ -99,10 +103,12 @@ class MessageLayer(Layer):
 
         self.add(self.msg)
 
-        actions = Accelerate(MoveBy((0, -h / 2.0), duration=0.5)) + \
-                  Delay(1) + \
-                  Accelerate(MoveBy((0, -h / 2.0), duration=0.5)) + \
-                  Hide()
+        actions = Accelerate(MoveBy((0, -h / 2.0), duration=0.5))
+        if not persist:
+            actions += \
+                Delay(1) + \
+                Accelerate(MoveBy((0, -h / 2.0), duration=0.5)) + \
+                Hide()
 
         if callback:
             actions += CallFunc(callback)
@@ -117,8 +123,11 @@ class HUD(Layer):
         self.add(self.score_layer)
         self.add(MessageLayer(), name='msg')
 
-    def show_message(self, msg, callback=None):
-        self.get('msg').show_message(msg, callback)
+    def show_message(self, msg, callback=None, persist=False):
+        self.get('msg').show_message(msg, callback, persist)
 
     def set_objectives(self, objectives):
         self.score_layer.set_objectives(objectives)
+
+    def update_time(self, time_percent):
+        self.score_layer.progress_bar.set_progress(time_percent)

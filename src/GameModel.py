@@ -3,6 +3,7 @@ __all__ = ['GameModel']
 import pyglet
 from random import choice, randint
 from glob import glob
+from cocos.director import director
 from cocos.sprite import Sprite
 from cocos.actions import *
 from status import status
@@ -28,13 +29,31 @@ class GameModel(pyglet.event.EventDispatcher):
         self.available_tiles = glob('images/*.png')
         self.game_state = WAITING_PLAYER_MOVEMENT
         self.objectives = []
+        self.play_time = self.max_play_time = 4
+        self.on_game_over_pause = 0
 
     def start(self):
         self.set_next_level()
 
     def set_next_level(self):
+        for elem in self.imploding_tiles + self.dropping_tiles:
+            self.view.remove(elem)
+        self.on_game_over_pause = 0
         self.fill_with_random_tiles()
         self.set_objectives()
+        pyglet.clock.schedule_interval(self.time_tick, 1)
+
+    def time_tick(self, delta):
+        self.play_time -= 1
+        self.dispatch_event("on_update_time", self.play_time/float(self.max_play_time))
+        if self.play_time == 0:
+            self.on_game_over_pause = 2 # Ignore clicks
+            pyglet.clock.unschedule(self.time_tick)
+            self.dispatch_event("on_game_over")
+            pyglet.clock.schedule_once(self.on_end_game_over_pause, 3)
+
+    def on_end_game_over_pause(self, delta):
+        self.on_game_over_pause = 1  # Click for new game
 
     def set_objectives(self):
         objectives = []
@@ -51,6 +70,8 @@ class GameModel(pyglet.event.EventDispatcher):
         """
         Fills the tile_grid with random tiles
         """
+        for elem in [x[1] for x in self.tile_grid.values()]:
+            self.view.remove(elem)
         tile_grid = {}
         # Fill the data matrix with random tile types
         while True:  # Loop until we have a valid table (no imploding lines)
@@ -227,12 +248,16 @@ class GameModel(pyglet.event.EventDispatcher):
         return all_line_members
 
     def on_mouse_press(self, x, y):
+        if self.on_game_over_pause == 1:
+             pyglet.clock.schedule_once(lambda n: director.pop(), 0.5)
+        if self.on_game_over_pause == 2:
+            return
         if self.game_state == WAITING_PLAYER_MOVEMENT:
             self.swap_start_pos = self.to_model_pos((x, y))
             self.game_state = PLAYER_DOING_MOVEMENT
 
     def on_mouse_drag(self, x, y):
-        if self.game_state != PLAYER_DOING_MOVEMENT:
+        if self.on_game_over_pause != 0 or self.game_state != PLAYER_DOING_MOVEMENT:
             return
 
         start_x, start_y = self.swap_start_pos
@@ -265,3 +290,6 @@ class GameModel(pyglet.event.EventDispatcher):
             print line_str
 
 GameModel.register_event_type('on_update_objectives')
+GameModel.register_event_type('on_update_time')
+GameModel.register_event_type('on_game_over')
+GameModel.register_event_type('on_game_out')
