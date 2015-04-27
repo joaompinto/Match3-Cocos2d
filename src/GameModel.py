@@ -17,6 +17,7 @@ PLAYER_DOING_MOVEMENT = 2
 SWAPPING_TILES = 3
 IMPLODING_TILES = 4
 DROPPING_TILES = 5
+GAME_OVER = 6
 
 class GameModel(pyglet.event.EventDispatcher):
     def __init__(self):
@@ -29,31 +30,28 @@ class GameModel(pyglet.event.EventDispatcher):
         self.available_tiles = glob('images/*.png')
         self.game_state = WAITING_PLAYER_MOVEMENT
         self.objectives = []
-        self.play_time = self.max_play_time = 4
         self.on_game_over_pause = 0
 
     def start(self):
         self.set_next_level()
 
     def set_next_level(self):
+        self.play_time = self.max_play_time = 60
         for elem in self.imploding_tiles + self.dropping_tiles:
             self.view.remove(elem)
         self.on_game_over_pause = 0
         self.fill_with_random_tiles()
         self.set_objectives()
+        pyglet.clock.unschedule(self.time_tick)
         pyglet.clock.schedule_interval(self.time_tick, 1)
 
     def time_tick(self, delta):
         self.play_time -= 1
         self.dispatch_event("on_update_time", self.play_time/float(self.max_play_time))
         if self.play_time == 0:
-            self.on_game_over_pause = 2 # Ignore clicks
             pyglet.clock.unschedule(self.time_tick)
+            self.game_state = GAME_OVER
             self.dispatch_event("on_game_over")
-            pyglet.clock.schedule_once(self.on_end_game_over_pause, 3)
-
-    def on_end_game_over_pause(self, delta):
-        self.on_game_over_pause = 1  # Click for new game
 
     def set_objectives(self):
         objectives = []
@@ -108,15 +106,22 @@ class GameModel(pyglet.event.EventDispatcher):
             self.imploding_tiles.append(sprite)  # Track tiles being imploded
             sprite.do(ScaleTo(0, 0.5) | RotateTo(180, 0.5) + CallFuncS(self.on_tile_remove))  # Implode animation
             implode_count[tile_type] = implode_count.get(tile_type, 0) + 1
+        # Decrease counter for tiles matching objectives
         for elem in self.objectives:
             if elem[0] in implode_count:
                 Scale = ScaleBy(1.5, 0.2)
                 elem[2] = max(0, elem[2]-implode_count[elem[0]])
                 elem[1].do((Scale + Reverse(Scale))*3)
+        # Remove objectives already completed
+        self.objectives = [elem for elem in self.objectives if elem[2] > 0]
         if len(self.imploding_tiles) > 0:
             self.game_state = IMPLODING_TILES  # Wait for the implosion animation to finish
+            pyglet.clock.unschedule(self.time_tick)
+            print "Removing time_tick"
         else:
             self.game_state = WAITING_PLAYER_MOVEMENT
+            print "Adding time tick"
+            pyglet.clock.schedule_interval(self.time_tick, 1)
         return self.imploding_tiles
 
     def drop_groundless_tiles(self):
@@ -160,6 +165,9 @@ class GameModel(pyglet.event.EventDispatcher):
         if len(self.imploding_tiles) == 0:  # Implosion complete, drop tiles to fill gaps
             self.dispatch_event("on_update_objectives")
             self.drop_groundless_tiles()
+            if len(self.objectives) == 0:
+                pyglet.clock.unschedule(self.time_tick)
+                self.dispatch_event("on_level_completed")
 
     def set_controller( self, controller):
         self.controller = controller
@@ -180,7 +188,6 @@ class GameModel(pyglet.event.EventDispatcher):
 
     def on_tiles_swap_completed(self):
         self.game_state = DROPPING_TILES
-
         if len(self.implode_lines()) == 0:
             # No lines imploded, roll back the game play
 
@@ -248,16 +255,12 @@ class GameModel(pyglet.event.EventDispatcher):
         return all_line_members
 
     def on_mouse_press(self, x, y):
-        if self.on_game_over_pause == 1:
-             pyglet.clock.schedule_once(lambda n: director.pop(), 0.5)
-        if self.on_game_over_pause == 2:
-            return
         if self.game_state == WAITING_PLAYER_MOVEMENT:
             self.swap_start_pos = self.to_model_pos((x, y))
             self.game_state = PLAYER_DOING_MOVEMENT
 
     def on_mouse_drag(self, x, y):
-        if self.on_game_over_pause != 0 or self.game_state != PLAYER_DOING_MOVEMENT:
+        if self.game_state != PLAYER_DOING_MOVEMENT:
             return
 
         start_x, start_y = self.swap_start_pos
@@ -292,4 +295,4 @@ class GameModel(pyglet.event.EventDispatcher):
 GameModel.register_event_type('on_update_objectives')
 GameModel.register_event_type('on_update_time')
 GameModel.register_event_type('on_game_over')
-GameModel.register_event_type('on_game_out')
+GameModel.register_event_type('on_level_completed')

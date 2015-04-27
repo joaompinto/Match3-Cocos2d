@@ -29,7 +29,6 @@ class ScoreLayer(Layer):
 
         self.position = (0, h - 48)
 
-
         progress_bar = self.progress_bar = ProgressBar(width=200, height=20)
         progress_bar.position = 20, 15
         self.add(progress_bar)
@@ -53,6 +52,7 @@ class ScoreLayer(Layer):
 
     def set_objectives(self, objectives):
         w, h = director.get_window_size()
+        # Clear any previously set objectives
         for tile_type, sprite, count in self.objectives:
             self.remove(sprite)
         for count_label in self.objectives_labels:
@@ -91,7 +91,7 @@ class ScoreLayer(Layer):
 
 
 class MessageLayer(Layer):
-    def show_message(self, msg, callback=None, persist=False):
+    def show_message(self, msg, callback=None, msg_duration=1):
         w, h = director.get_window_size()
 
         self.msg = Label(msg,
@@ -103,12 +103,11 @@ class MessageLayer(Layer):
 
         self.add(self.msg)
 
-        actions = Accelerate(MoveBy((0, -h / 2.0), duration=0.5))
-        if not persist:
-            actions += \
-                Delay(1) + \
-                Accelerate(MoveBy((0, -h / 2.0), duration=0.5)) + \
-                Hide()
+        actions = Accelerate(MoveBy((0, -h / 2.0), duration=msg_duration/2))
+        actions += \
+            Delay(1) + \
+            Accelerate(MoveBy((0, -h / 2.0), duration=msg_duration/2)) + \
+            Hide()
 
         if callback:
             actions += CallFunc(callback)
@@ -123,8 +122,8 @@ class HUD(Layer):
         self.add(self.score_layer)
         self.add(MessageLayer(), name='msg')
 
-    def show_message(self, msg, callback=None, persist=False):
-        self.get('msg').show_message(msg, callback, persist)
+    def show_message(self, msg, callback=None, msg_duration=1):
+        self.get('msg').show_message(msg, callback, msg_duration)
 
     def set_objectives(self, objectives):
         self.score_layer.set_objectives(objectives)
