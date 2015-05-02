@@ -3,6 +3,7 @@ __all__ = ['GameModel']
 import pyglet
 from random import choice, randint
 from glob import glob
+from os.path import join
 from cocos.director import director
 from cocos.sprite import Sprite
 from cocos.actions import *
@@ -27,7 +28,7 @@ class GameModel(pyglet.event.EventDispatcher):
         self.dropping_tiles = []  # List of tile sprites being dropped, used during DROPPING_TILES
         self.swap_start_pos = None  # Position of the first tile clicked for swapping
         self.swap_end_pos = None  # Position of the second tile clicked for swapping
-        self.available_tiles = glob('images/*.png')
+        self.available_tiles = glob(join('images', '*.png'))
         self.game_state = WAITING_PLAYER_MOVEMENT
         self.objectives = []
         self.on_game_over_pause = 0
