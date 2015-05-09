@@ -27,7 +27,8 @@ class GameModel(pyglet.event.EventDispatcher):
         self.dropping_tiles = []  # List of tile sprites being dropped, used during DROPPING_TILES
         self.swap_start_pos = None  # Position of the first tile clicked for swapping
         self.swap_end_pos = None  # Position of the second tile clicked for swapping
-        self.available_tiles = glob('images/*.png')
+        # the replace is for windows compatibilty
+        self.available_tiles = [s.replace('\\', '/') for s in glob('images/*.png')]
         self.game_state = WAITING_PLAYER_MOVEMENT
         self.objectives = []
         self.on_game_over_pause = 0
