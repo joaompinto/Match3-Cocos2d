@@ -3,7 +3,6 @@ __all__ = ['GameModel']
 import pyglet
 from random import choice, randint
 from glob import glob
-from cocos.director import director
 from cocos.sprite import Sprite
 from cocos.actions import *
 from status import status
@@ -83,7 +82,7 @@ class GameModel(pyglet.event.EventDispatcher):
             tile_grid = {}
 
         # Build the sprites based on the assigned tile type
-        for key, value in tile_grid.iteritems():
+        for key, value in tile_grid.items():
             tile_type, sprite = value
             sprite = self.tile_sprite(tile_type, self.to_display(key))
             tile_grid[key] = tile_type, sprite
@@ -118,10 +117,8 @@ class GameModel(pyglet.event.EventDispatcher):
         if len(self.imploding_tiles) > 0:
             self.game_state = IMPLODING_TILES  # Wait for the implosion animation to finish
             pyglet.clock.unschedule(self.time_tick)
-            print "Removing time_tick"
         else:
             self.game_state = WAITING_PLAYER_MOVEMENT
-            print "Adding time tick"
             pyglet.clock.schedule_interval(self.time_tick, 1)
         return self.imploding_tiles
 
@@ -205,16 +202,18 @@ class GameModel(pyglet.event.EventDispatcher):
     def on_tiles_swap_back_completed(self):
         self.game_state = WAITING_PLAYER_MOVEMENT
 
-    def to_display(self, (row, col)):
+    def to_display(self, row_col):
         """
         :param row:
         :param col:
         :return: (x, y) from display corresponding coordinates from the bi-dimensional ( row, col) array position
         """
+        row, col = row_col
         return CELL_WIDTH / 2 + row * CELL_WIDTH, CELL_HEIGHT / 2 + col * CELL_HEIGHT
 
-    def to_model_pos(self, (view_x, view_y)):
-        return view_x / CELL_WIDTH, view_y / CELL_HEIGHT
+    def to_model_pos(self, view_x_y):
+        view_x, view_y = view_x_y
+        return int(view_x / CELL_WIDTH), int(view_y / CELL_HEIGHT)
 
     def get_same_type_lines(self, tile_grid, min_count=3):
         """
@@ -291,7 +290,7 @@ class GameModel(pyglet.event.EventDispatcher):
             line_str = ''
             for x in range(COLS_COUNT):
                 line_str += str(self.tile_grid[x, y][0])
-            print line_str
+            print(line_str)
 
 GameModel.register_event_type('on_update_objectives')
 GameModel.register_event_type('on_update_time')
