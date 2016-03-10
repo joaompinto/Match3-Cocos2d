@@ -5,6 +5,7 @@ from cocos.actions import *
 from ProgressBar import ProgressBar
 from status import status
 
+
 class BackgroundLayer(Layer):
     def __init__(self):
         super(BackgroundLayer, self).__init__()
@@ -12,14 +13,11 @@ class BackgroundLayer(Layer):
 
     def draw(self):
         pass
-        # glPushMatrix()
-        # self.transform()
-        #self.img.blit(0,0)
-        #glPopMatrix()
 
 
 class ScoreLayer(Layer):
     objectives = []
+
     def __init__(self):
         w, h = director.get_window_size()
         super(ScoreLayer, self).__init__()
@@ -38,7 +36,7 @@ class ScoreLayer(Layer):
                            anchor_x='left',
                            anchor_y='bottom')
         self.score.position = (0, 0)
-        #self.add(self.score)
+        # self.add(self.score)
         self.lvl = Label('Lvl:', font_size=36,
                          font_name='Edit Undo Line BRK',
                          color=(255, 255, 255, 255),
@@ -46,7 +44,7 @@ class ScoreLayer(Layer):
                          anchor_y='bottom')
 
         self.lvl.position = (450, 0)
-        #self.add(self.lvl)
+        # self.add(self.lvl)
         self.objectives_list = []
         self.objectives_labels = []
 
@@ -60,21 +58,21 @@ class ScoreLayer(Layer):
         self.objectives = objectives
         self.objectives_labels = []
         i = 0
-        x = w/2-150/2
+        x = w / 2 - 150 / 2
         for tile_type, sprite, count in objectives:
-            text_w = len(str(count))*7
+            text_w = len(str(count)) * 7
             count_label = Label(str(count), font_size=14,
-                   font_name='Edit Undo Line BRK',
-                   color=(255, 255, 255, 255), bold=True,
-                   anchor_x='left', anchor_y='bottom')
-            count_label.position = x-text_w, 7
+                                font_name='Edit Undo Line BRK',
+                                color=(255, 255, 255, 255), bold=True,
+                                anchor_x='left', anchor_y='bottom')
+            count_label.position = x - text_w, 7
             self.add(count_label, z=2)
             self.objectives_labels.append(count_label)
             count_label = Label(str(count), font_size=16,
-                   font_name='Edit Undo Line BRK',
-                   color=(0, 0, 0, 255), bold=True,
-                   anchor_x='left', anchor_y='bottom')
-            count_label.position = x-text_w-1, 8
+                                font_name='Edit Undo Line BRK',
+                                color=(0, 0, 0, 255), bold=True,
+                                anchor_x='left', anchor_y='bottom')
+            count_label.position = x - text_w - 1, 8
             self.add(count_label, z=1)
             self.objectives_labels.append(count_label)
             sprite.position = x, 24
@@ -103,10 +101,10 @@ class MessageLayer(Layer):
 
         self.add(self.msg)
 
-        actions = Accelerate(MoveBy((0, -h / 2.0), duration=msg_duration/2))
+        actions = Accelerate(MoveBy((0, -h / 2.0), duration=msg_duration / 2))
         actions += \
             Delay(1) + \
-            Accelerate(MoveBy((0, -h / 2.0), duration=msg_duration/2)) + \
+            Accelerate(MoveBy((0, -h / 2.0), duration=msg_duration / 2)) + \
             Hide()
 
         if callback:

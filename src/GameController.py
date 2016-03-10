@@ -2,8 +2,7 @@ from cocos.layer import Layer
 
 
 class GameController(Layer):
-
-    is_event_handler = True #: enable pyglet's events
+    is_event_handler = True  #: enable pyglet's events
 
     def __init__(self, model):
         super(GameController, self).__init__()
@@ -14,4 +13,3 @@ class GameController(Layer):
 
     def on_mouse_drag(self, x, y, dx, dy, buttons, modifiers):
         self.model.on_mouse_drag(x, y)
-

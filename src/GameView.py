@@ -1,11 +1,9 @@
-
 import cocos
 from cocos.director import director
 from cocos.scene import Scene
 from HUD import HUD
 from GameModel import GameModel
 from GameController import GameController
-
 
 __all__ = ['get_newgame']
 
@@ -39,10 +37,7 @@ class GameView(cocos.layer.ColorLayer):
         self.hud.show_message('LEVEL COMPLETED', msg_duration=3, callback=lambda: self.model.set_next_level())
 
 
-
 def get_newgame():
-
-
     scene = Scene()
     model = GameModel()
     controller = GameController(model)

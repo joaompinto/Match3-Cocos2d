@@ -1,6 +1,7 @@
 __all__ = ['GameModel']
 
 import pyglet
+import os.path
 from random import choice, randint
 from glob import glob
 from cocos.sprite import Sprite
@@ -18,6 +19,7 @@ IMPLODING_TILES = 4
 DROPPING_TILES = 5
 GAME_OVER = 6
 
+
 class GameModel(pyglet.event.EventDispatcher):
     def __init__(self):
         super(GameModel, self).__init__()
@@ -27,6 +29,8 @@ class GameModel(pyglet.event.EventDispatcher):
         self.swap_start_pos = None  # Position of the first tile clicked for swapping
         self.swap_end_pos = None  # Position of the second tile clicked for swapping
         # the replace is for windows compatibilty
+        script_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+        os.chdir(script_dir)
         self.available_tiles = [s.replace('\\', '/') for s in glob('images/*.png')]
         self.game_state = WAITING_PLAYER_MOVEMENT
         self.objectives = []
@@ -47,7 +51,7 @@ class GameModel(pyglet.event.EventDispatcher):
 
     def time_tick(self, delta):
         self.play_time -= 1
-        self.dispatch_event("on_update_time", self.play_time/float(self.max_play_time))
+        self.dispatch_event("on_update_time", self.play_time / float(self.max_play_time))
         if self.play_time == 0:
             pyglet.clock.unschedule(self.time_tick)
             self.game_state = GAME_OVER
@@ -110,8 +114,8 @@ class GameModel(pyglet.event.EventDispatcher):
         for elem in self.objectives:
             if elem[0] in implode_count:
                 Scale = ScaleBy(1.5, 0.2)
-                elem[2] = max(0, elem[2]-implode_count[elem[0]])
-                elem[1].do((Scale + Reverse(Scale))*3)
+                elem[2] = max(0, elem[2] - implode_count[elem[0]])
+                elem[1].do((Scale + Reverse(Scale)) * 3)
         # Remove objectives already completed
         self.objectives = [elem for elem in self.objectives if elem[2] > 0]
         if len(self.imploding_tiles) > 0:
@@ -167,10 +171,10 @@ class GameModel(pyglet.event.EventDispatcher):
                 pyglet.clock.unschedule(self.time_tick)
                 self.dispatch_event("on_level_completed")
 
-    def set_controller( self, controller):
+    def set_controller(self, controller):
         self.controller = controller
 
-    def set_view( self, view):
+    def set_view(self, view):
         self.view = view
 
     def tile_sprite(self, tile_type, pos):
@@ -291,6 +295,7 @@ class GameModel(pyglet.event.EventDispatcher):
             for x in range(COLS_COUNT):
                 line_str += str(self.tile_grid[x, y][0])
             print(line_str)
+
 
 GameModel.register_event_type('on_update_objectives')
 GameModel.register_event_type('on_update_time')
