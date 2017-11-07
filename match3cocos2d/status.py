@@ -1,7 +1,9 @@
 __all__ = ['status']
 
-class Status( object ):
-    def __init__( self ):
+
+class Status(object):
+
+    def __init__(self):
 
         # current score
         self.score = 0
@@ -21,13 +23,13 @@ class Status( object ):
         # total lines completed
         self.tot_lines = 0
 
-
-    def reset( self ):
+    def reset(self):
         self.score = 0
         self.next_piece = None
         self.level = None
         self.level_idx = None
         self.lines = 0
         self.tot_lines = 0
+
 
 status = Status()

@@ -1,5 +1,5 @@
 import cocos
-from pyglet.gl import *
+from pyglet import gl
 
 
 class ProgressBar(cocos.cocosnode.CocosNode):
@@ -8,7 +8,8 @@ class ProgressBar(cocos.cocosnode.CocosNode):
         super(ProgressBar, self).__init__()
         self.width, self.height = width, height
         self.vertexes_in = [(0, 0, 0), (width, 0, 0), (width, height, 0), (0, height, 0)]
-        self.vertexes_out = [(-2, -2, 0), (width+2, -2, 0), (width+2, height+2, 0), (-2, height+2, 0)]
+        self.vertexes_out = [(-2, -2, 0),
+            (width + 2, -2, 0), (width + 2, height + 2, 0), (-2, height + 2, 0)]
 
     def set_progress(self, percent):
         width = int(self.width * percent)
@@ -16,14 +17,14 @@ class ProgressBar(cocos.cocosnode.CocosNode):
         self.vertexes_in = [(0, 0, 0), (width, 0, 0), (width, height, 0), (0, height, 0)]
 
     def draw(self):
-        glPushMatrix()
+        gl.glPushMatrix()
         self.transform()
-        glBegin(GL_QUADS)
-        glColor4ub(*(255, 255, 255, 255))
+        gl.glBegin(gl.GL_QUADS)
+        gl.glColor4ub(*(255, 255, 255, 255))
         for v in self.vertexes_out:
-            glVertex3i(*v)
-        glColor4ub(*(0, 150, 0, 255))
+            gl.glVertex3i(*v)
+        gl.glColor4ub(*(0, 150, 0, 255))
         for v in self.vertexes_in:
-            glVertex3i(*v)
-        glEnd()
-        glPopMatrix()
+            gl.glVertex3i(*v)
+        gl.glEnd()
+        gl.glPopMatrix()

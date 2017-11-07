@@ -57,7 +57,6 @@ class ScoreLayer(Layer):
             self.remove(count_label)
         self.objectives = objectives
         self.objectives_labels = []
-        i = 0
         x = w / 2 - 150 / 2
         for tile_type, sprite, count in objectives:
             text_w = len(str(count)) * 7

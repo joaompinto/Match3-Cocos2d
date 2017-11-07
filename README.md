@@ -11,5 +11,5 @@ cd Match3-Cocos2d
 # Install the required libs
 sudo pip install requirements.txt
 # Start the game
-python src/Main.py
+python match3cocos2d/Main.py
 ```
