@@ -13,3 +13,6 @@ sudo pip install requirements.txt
 # Start the game
 python match3cocos2d/Main.py
 ```
+
+
+![alt](demo/play.gif)
