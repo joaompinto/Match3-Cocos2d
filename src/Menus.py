@@ -6,7 +6,7 @@ import pyglet
 
 class MainMenu(Menu):
     def __init__(self):
-        super(MainMenu, self).__init__('SamePop')
+        super(MainMenu, self).__init__('Match3')
 
         # you can override the font that will be used for the title and the items
         # you can also override the font size and the colors. see menu.py for

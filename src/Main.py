@@ -13,7 +13,7 @@ script_dir = os.path.dirname(os.path.realpath(__file__))
 pyglet.resource.path = [join(script_dir, '..')]
 pyglet.resource.reindex()
 
-director.director.init(width=800, height=650, caption="Pop The Same")
+director.director.init(width=800, height=650, caption="Match 3")
 
 scene = Scene()
 scene.add(MultiplexLayer(
